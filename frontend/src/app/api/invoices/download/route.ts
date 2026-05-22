@@ -8,7 +8,7 @@ export async function GET(req: Request) {
     const orderCode = searchParams.get("orderCode") || "SN-100000";
 
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    const res = await fetch(`${backendUrl}/api/invoices/download?orderCode=${orderCode}`, {
+    const res = await fetch(`${backendUrl}/api/invoices/download?${searchParams.toString()}`, {
       cache: "no-store",
     });
 
@@ -24,8 +24,9 @@ export async function GET(req: Request) {
         "Content-Disposition": `inline; filename="invoice-${orderCode}.pdf"`,
       },
     });
-  } catch (error: any) {
-    console.error("Frontend invoice proxy error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    const err = error as Error;
+    console.error("Frontend invoice proxy error:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

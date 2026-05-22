@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { MOCK_PRODUCTS, MOCK_CATEGORIES, MockProduct } from "@/lib/mockData";
 import { useToastStore } from "@/store/useToastStore";
-import { Plus, Edit, Trash2, Check, X, ShieldAlert } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 
 export default function AdminProductsPage() {
   const showToast = useToastStore((state) => state.showToast);
@@ -292,6 +292,7 @@ export default function AdminProductsPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="relative w-10 h-10 rounded overflow-hidden shrink-0 bg-zinc-900">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={p.images[0]} alt={p.name} className="object-cover w-full h-full" />
                           </div>
                           <div>

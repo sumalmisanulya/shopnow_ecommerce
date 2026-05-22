@@ -5,7 +5,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-    const response = await fetch(`${backendUrl}/api/checkout`, {
+    const response = await fetch(`${backendUrl}/api/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     const err = error as Error;
-    console.error("Frontend checkout proxy error:", err);
+    console.error("Frontend register proxy error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

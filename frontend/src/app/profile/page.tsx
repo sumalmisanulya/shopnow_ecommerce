@@ -6,10 +6,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useToastStore } from "@/store/useToastStore";
 import {
-  User,
   ShoppingBag,
   Clock,
-  ArrowRight,
   FileDown,
   RefreshCw,
   MapPin,
@@ -199,7 +197,7 @@ export default function ProfilePage() {
               <div className="py-20 text-center">
                 <Clock className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
                 <h4 className="text-zinc-300 font-bold">No orders found</h4>
-                <p className="text-xs text-zinc-500 mt-1 mb-6">You haven't purchased any items yet.</p>
+                <p className="text-xs text-zinc-500 mt-1 mb-6">You haven&apos;t purchased any items yet.</p>
                 <Link
                   href="/products"
                   className="inline-flex items-center gap-1 text-xs font-bold text-violet-400 hover:text-violet-300 transition-colors"

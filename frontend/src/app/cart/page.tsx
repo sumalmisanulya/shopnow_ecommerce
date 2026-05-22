@@ -17,6 +17,20 @@ export default function CartPage() {
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Payment states
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "cod" | null>(null);
+  const [cardName, setCardName] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
+
+  // Delivery states
+  const [shippingName, setShippingName] = useState("");
+  const [shippingPhone, setShippingPhone] = useState("");
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [shippingCity, setShippingCity] = useState("");
+  const [shippingZip, setShippingZip] = useState("");
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -34,6 +48,51 @@ export default function CartPage() {
   const tax = subtotal * 0.08; // 8% estimated tax
   const total = subtotal + shipping + tax;
 
+  const validateCard = () => {
+    if (!cardName.trim()) {
+      showToast("Please enter the cardholder name.", "error");
+      return false;
+    }
+    const cleanNum = cardNumber.replace(/\s+/g, "");
+    if (!/^\d{16}$/.test(cleanNum)) {
+      showToast("Please enter a valid 16-digit card number.", "error");
+      return false;
+    }
+    if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
+      showToast("Please enter expiry date in MM/YY format.", "error");
+      return false;
+    }
+    if (!/^\d{3,4}$/.test(cardCvv)) {
+      showToast("Please enter a valid 3 or 4-digit CVV.", "error");
+      return false;
+    }
+    return true;
+  };
+
+  const validateCodDetails = () => {
+    if (!shippingName.trim()) {
+      showToast("Please enter the receiver's name.", "error");
+      return false;
+    }
+    if (!shippingPhone.trim()) {
+      showToast("Please enter your contact phone number.", "error");
+      return false;
+    }
+    if (!shippingAddress.trim()) {
+      showToast("Please enter the delivery address.", "error");
+      return false;
+    }
+    if (!shippingCity.trim()) {
+      showToast("Please enter the delivery city.", "error");
+      return false;
+    }
+    if (!shippingZip.trim()) {
+      showToast("Please enter the ZIP code.", "error");
+      return false;
+    }
+    return true;
+  };
+
   const handleCheckout = async () => {
     if (!session) {
       showToast("Please sign in to proceed with checkout.", "error");
@@ -41,33 +100,69 @@ export default function CartPage() {
       return;
     }
 
+    if (!paymentMethod) {
+      showToast("Please select a payment method.", "error");
+      return;
+    }
+
+    if (paymentMethod === "card") {
+      if (!validateCard()) return;
+    }
+
+    if (paymentMethod === "cod") {
+      if (!validateCodDetails()) return;
+    }
+
     setIsLoading(true);
     try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, userId: session.user?.id || "fallback-id" }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.url) {
-        window.location.href = data.url;
-      } else {
-        // Mock fallback if Stripe keys are not set up or configured
-        showToast("Stripe not configured. Redirecting to simulated payment...", "info");
-        setTimeout(() => {
-          router.push(`/checkout/success?session_id=mock_${Math.random().toString(36).substring(2, 9)}`);
-        }, 1500);
-      }
-    } catch (err) {
-      console.error("Checkout error, using fallback simulated flow", err);
-      showToast("Using simulated offline payment flow...", "info");
+      // Simulate transaction processing delay
       setTimeout(() => {
-        router.push(`/checkout/success?session_id=mock_${Math.random().toString(36).substring(2, 9)}`);
+        setIsLoading(false);
+        showToast(
+          paymentMethod === "card"
+            ? "Payment authorized successfully!"
+            : "Order confirmed under Cash on Delivery!",
+          "success"
+        );
+
+        const code = "SN-" + Math.floor(100000 + Math.random() * 900000);
+        const mockOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
+        const fullAddress = paymentMethod === "cod" 
+          ? `${shippingAddress}, ${shippingCity}, ZIP ${shippingZip}` 
+          : "123 Creative Studio, Design District, NY 10001";
+        const finalPhone = paymentMethod === "cod" ? shippingPhone : "+1 (555) 019-2834";
+        const finalReceiver = paymentMethod === "cod" ? shippingName : (session.user?.name || "Customer");
+
+        const newOrder = {
+          id: "ord_" + Math.random().toString(36).substring(2, 9),
+          code: code,
+          createdAt: new Date().toISOString(),
+          status: paymentMethod === "cod" ? "PENDING" : "PAID",
+          totalPrice: total,
+          paymentMethod: paymentMethod === "cod" ? "CASH_ON_DELIVERY" : "CARD",
+          shippingAddress: fullAddress,
+          phone: finalPhone,
+          items: items.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price
+          }))
+        };
+        mockOrders.unshift(newOrder);
+        localStorage.setItem("mock_orders", JSON.stringify(mockOrders));
+
+        router.push(
+          `/checkout/success?session_id=mock_${Math.random()
+            .toString(36)
+            .substring(2, 9)}&payment_method=${paymentMethod}&code=${code}&total=${total.toFixed(2)}&shipping_name=${encodeURIComponent(
+            finalReceiver
+          )}&shipping_address=${encodeURIComponent(fullAddress)}&phone=${encodeURIComponent(finalPhone)}`
+        );
       }, 1500);
-    } finally {
+    } catch (err) {
+      console.error(err);
       setIsLoading(false);
+      showToast("An error occurred during checkout.", "error");
     }
   };
 
@@ -214,6 +309,172 @@ export default function CartPage() {
               </div>
             </div>
 
+            {/* Payment Method Selector */}
+            <div className="space-y-3 pt-4 border-t border-white/5 font-sans">
+              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 font-sans">
+                Payment Method
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("card")}
+                  className={`flex flex-col items-center justify-center p-3.5 rounded-xl border transition-all text-xs font-medium cursor-pointer ${
+                    paymentMethod === "card"
+                      ? "bg-violet-600/10 border-violet-500 text-violet-300"
+                      : "bg-white/5 border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/20"
+                  }`}
+                >
+                  <CreditCard className="w-5 h-5 mb-1.5" />
+                  <span>Pay with Card</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("cod")}
+                  className={`flex flex-col items-center justify-center p-3.5 rounded-xl border transition-all text-xs font-medium cursor-pointer ${
+                    paymentMethod === "cod"
+                      ? "bg-violet-600/10 border-violet-500 text-violet-300"
+                      : "bg-white/5 border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/20"
+                  }`}
+                >
+                  <svg
+                    className="w-5 h-5 mb-1.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                  <span>Cash on Delivery</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Card Payment Form */}
+            {paymentMethod === "card" && (
+              <div className="space-y-3 pt-4 border-t border-white/5 animate-fade-in font-sans">
+                <h4 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">
+                  Card Details
+                </h4>
+                <div className="space-y-3">
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Cardholder Name"
+                      required
+                      value={cardName}
+                      onChange={(e) => setCardName(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-violet-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Card Number"
+                      maxLength={19}
+                      required
+                      value={cardNumber}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "");
+                        const formatted = value.match(/.{1,4}/g)?.join(" ") || "";
+                        setCardNumber(formatted);
+                      }}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-violet-500 transition-colors"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      placeholder="Expiry (MM/YY)"
+                      maxLength={5}
+                      required
+                      value={cardExpiry}
+                      onChange={(e) => {
+                        let value = e.target.value.replace(/\D/g, "");
+                        if (value.length > 2) {
+                          value = value.substring(0, 2) + "/" + value.substring(2, 4);
+                        }
+                        setCardExpiry(value);
+                      }}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-violet-500 transition-colors"
+                    />
+                    <input
+                      type="password"
+                      placeholder="CVV"
+                      maxLength={4}
+                      required
+                      value={cardCvv}
+                      onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, ""))}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-violet-500 transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Delivery Details Form for Cash on Delivery */}
+            {paymentMethod === "cod" && (
+              <div className="space-y-3 pt-4 border-t border-white/5 animate-fade-in font-sans">
+                <h4 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">
+                  Delivery Details
+                </h4>
+                <div className="space-y-3">
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Receiver's Full Name"
+                      required
+                      value={shippingName}
+                      onChange={(e) => setShippingName(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-violet-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Contact Phone Number"
+                      required
+                      value={shippingPhone}
+                      onChange={(e) => setShippingPhone(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-violet-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Delivery Address (Street, Apt)"
+                      required
+                      value={shippingAddress}
+                      onChange={(e) => setShippingAddress(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-violet-500 transition-colors"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      placeholder="City"
+                      required
+                      value={shippingCity}
+                      onChange={(e) => setShippingCity(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-violet-500 transition-colors"
+                    />
+                    <input
+                      type="text"
+                      placeholder="ZIP Code"
+                      required
+                      value={shippingZip}
+                      onChange={(e) => setShippingZip(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-violet-500 transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <button
               onClick={handleCheckout}
               disabled={isLoading}
@@ -226,8 +487,29 @@ export default function CartPage() {
                 </>
               ) : (
                 <>
-                  <CreditCard className="w-5 h-5" />
-                  Proceed to Checkout
+                  {paymentMethod === "cod" ? (
+                    <>
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                        />
+                      </svg>
+                      Place COD Order
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-5 h-5" />
+                      {paymentMethod === "card" ? "Pay with Card" : "Proceed to Checkout"}
+                    </>
+                  )}
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </>
               )}

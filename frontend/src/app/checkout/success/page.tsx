@@ -4,11 +4,14 @@ import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCartStore } from "@/store/useCartStore";
-import { CheckCircle, Calendar, FileDown, ArrowRight, Loader2, Compass } from "lucide-react";
+import { CheckCircle, Calendar, FileDown, Loader2, Compass, MapPin, Phone, User } from "lucide-react";
 
 function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get("session_id") || "mock_session";
+  const paymentMethod = searchParams.get("payment_method");
+  const shippingName = searchParams.get("shipping_name");
+  const shippingAddress = searchParams.get("shipping_address");
+  const phone = searchParams.get("phone");
   const clearCart = useCartStore((state) => state.clearCart);
   
   const [orderCode, setOrderCode] = useState("");
@@ -19,31 +22,37 @@ function CheckoutSuccessContent() {
     // Clear shopping cart on successful checkout redirect
     clearCart();
 
-    // Generate a random order number
-    const code = "SN-" + Math.floor(100000 + Math.random() * 900000);
-    setOrderCode(code);
+    const paramCode = searchParams.get("code");
     
-    // Proactively save this order inside localstorage so we can list it in user's profile dashboard!
-    const mockOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
-    const newOrder = {
-      id: "ord_" + Math.random().toString(36).substring(2, 9),
-      code: code,
-      createdAt: new Date().toISOString(),
-      status: "PENDING",
-      totalPrice: 299.99, // default simulation value
-      shippingAddress: "123 Creative Studio, Design District, NY 10001",
-      phone: "+1 (555) 019-2834",
-      items: [
-        {
-          name: "Acoustic Pro ANC Headphones",
-          quantity: 1,
-          price: 299.99
-        }
-      ]
-    };
-    mockOrders.unshift(newOrder);
-    localStorage.setItem("mock_orders", JSON.stringify(mockOrders));
-  }, [clearCart]);
+    if (paramCode) {
+      setOrderCode(paramCode);
+    } else {
+      // Generate a random order number
+      const code = "SN-" + Math.floor(100000 + Math.random() * 900000);
+      setOrderCode(code);
+      
+      // Proactively save this order inside localstorage so we can list it in user's profile dashboard!
+      const mockOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
+      const newOrder = {
+        id: "ord_" + Math.random().toString(36).substring(2, 9),
+        code: code,
+        createdAt: new Date().toISOString(),
+        status: "PENDING",
+        totalPrice: 299.99, // default simulation value
+        shippingAddress: "123 Creative Studio, Design District, NY 10001",
+        phone: "+1 (555) 019-2834",
+        items: [
+          {
+            name: "Acoustic Pro ANC Headphones",
+            quantity: 1,
+            price: 299.99
+          }
+        ]
+      };
+      mockOrders.unshift(newOrder);
+      localStorage.setItem("mock_orders", JSON.stringify(mockOrders));
+    }
+  }, [clearCart, searchParams]);
 
   if (!mounted) {
     return (
@@ -71,9 +80,15 @@ function CheckoutSuccessContent() {
         <CheckCircle className="w-20 h-20 text-emerald-400 relative z-10 animate-bounce" />
       </div>
 
-      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/15 mb-4">
-        Payment Successful
-      </span>
+      {searchParams.get("payment_method") === "cod" ? (
+        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-300 border border-blue-500/15 mb-4">
+          Cash on Delivery Confirmed
+        </span>
+      ) : (
+        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/15 mb-4">
+          Payment Successful
+        </span>
+      )}
       
       <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-100 mb-2">
         Thank You for Your Order!
@@ -97,7 +112,11 @@ function CheckoutSuccessContent() {
           <div className="relative">
             <span className="absolute -left-[31px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 ring-4 ring-zinc-950" />
             <h4 className="font-semibold text-zinc-200 text-sm">Order Confirmed</h4>
-            <p className="text-xs text-zinc-500 mt-0.5">We have received your payment and details.</p>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              {searchParams.get("payment_method") === "cod"
+                ? "We have registered your Cash on Delivery request."
+                : "We have received your payment and details."}
+            </p>
           </div>
           {/* Step 2 */}
           <div className="relative">
@@ -114,6 +133,47 @@ function CheckoutSuccessContent() {
             </p>
           </div>
         </div>
+
+        {/* Shipping Details for Cash on Delivery */}
+        {paymentMethod === "cod" && shippingAddress && (
+          <div className="mt-6 pt-6 border-t border-white/5 space-y-4">
+            <h4 className="font-bold text-sm text-zinc-200 uppercase tracking-wider flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-violet-400" />
+              Delivery Details
+            </h4>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/5 rounded-xl p-4 border border-white/5 font-sans">
+              <div className="space-y-1">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-500 block">
+                  Receiver Name
+                </span>
+                <div className="flex items-center gap-2 text-zinc-200 font-medium text-sm">
+                  <User className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>{shippingName}</span>
+                </div>
+              </div>
+              
+              <div className="space-y-1">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-500 block">
+                  Contact Number
+                </span>
+                <div className="flex items-center gap-2 text-zinc-200 font-medium text-sm">
+                  <Phone className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>{phone}</span>
+                </div>
+              </div>
+              
+              <div className="sm:col-span-2 space-y-1">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-500 block">
+                  Shipping Address
+                </span>
+                <p className="text-zinc-200 font-medium text-sm leading-relaxed">
+                  {shippingAddress}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Actions */}

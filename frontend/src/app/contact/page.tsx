@@ -47,7 +47,7 @@ export default function ContactPage() {
           Get in Touch
         </h1>
         <p className="text-zinc-500 text-sm sm:text-base mt-3 max-w-md mx-auto">
-          Have an inquiry, feedback, or need help? Send us a message and we'll respond as soon as possible.
+          Have an inquiry, feedback, or need help? Send us a message and we&apos;ll respond as soon as possible.
         </p>
       </div>
 

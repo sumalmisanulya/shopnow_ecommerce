@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ShoppingBag, Star, ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import { ArrowRight, ShieldCheck, Truck, RotateCcw } from "lucide-react";
 import { MOCK_CATEGORIES, MOCK_PRODUCTS } from "@/lib/mockData";
 
 export const dynamic = "force-dynamic";
@@ -126,7 +126,7 @@ export default async function HomePage() {
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Featured Masterpieces</h2>
           <p className="text-sm sm:text-base text-zinc-500 mt-3 max-w-lg mx-auto">
-            Explore our community's top picks. Made with high quality materials and built to perform.
+            Explore our community&apos;s top picks. Made with high quality materials and built to perform.
           </p>
         </div>
 

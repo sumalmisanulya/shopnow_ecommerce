@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition, useEffect } from "react";
-import { Search, X, Filter } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Search, Filter } from "lucide-react";
 import { MOCK_CATEGORIES } from "@/lib/mockData";
 
 export default function ProductFilters() {

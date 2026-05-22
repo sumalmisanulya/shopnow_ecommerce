@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MOCK_PRODUCTS } from "@/lib/mockData";
+import { MOCK_PRODUCTS, MockProduct } from "@/lib/mockData";
 import {
   DollarSign,
   ShoppingBag,
@@ -13,13 +13,19 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+interface OrderItem {
+  name: string;
+  quantity: number;
+  price: number;
+}
+
 interface Order {
   id: string;
   code: string;
   createdAt: string;
   status: string;
   totalPrice: number;
-  items: any[];
+  items: OrderItem[];
 }
 
 export default function AdminDashboardPage() {
@@ -34,12 +40,12 @@ export default function AdminDashboardPage() {
 
     // Load mock returns
     const localReturns = JSON.parse(localStorage.getItem("mock_returns") || "[]");
-    setReturnsCount(localReturns.filter((r: any) => r.status === "PENDING").length);
+    setReturnsCount(localReturns.filter((r: { status: string }) => r.status === "PENDING").length);
 
     // Calculate low stock products (stock <= 5)
-    const dbProducts = JSON.parse(localStorage.getItem("mock_db_products") || "[]");
-    const catalog = dbProducts.length > 0 ? dbProducts : MOCK_PRODUCTS;
-    const lowStock = catalog.filter((p: any) => p.stock <= 5).length;
+    const dbProducts = JSON.parse(localStorage.getItem("mock_db_products") || "[]") as MockProduct[];
+    const catalog: MockProduct[] = dbProducts.length > 0 ? dbProducts : MOCK_PRODUCTS;
+    const lowStock = catalog.filter((p: MockProduct) => p.stock <= 5).length;
     setLowStockCount(lowStock);
   }, []);
 

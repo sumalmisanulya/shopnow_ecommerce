@@ -3,6 +3,20 @@ import Image from "next/image";
 import { ArrowLeft, ShoppingBag } from "lucide-react";
 import ProductFilters from "@/components/ProductFilters";
 
+interface ProductItem {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  price: number;
+  stock: number;
+  images: string[];
+  categoryId: string;
+  categoryName?: string;
+  category?: { name: string };
+  active: boolean;
+}
+
 export const dynamic = "force-dynamic";
 
 interface PageProps {
@@ -27,7 +41,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   if (maxPrice) searchParamsObj.append("maxPrice", maxPrice);
   if (inStock) searchParamsObj.append("inStock", inStock);
 
-  let products: any[] = [];
+  let products: ProductItem[] = [];
   try {
     const res = await fetch(`${backendUrl}/api/products?${searchParamsObj.toString()}`, {
       cache: "no-store",
@@ -100,7 +114,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
                     ) : null}
                     
                     <span className="absolute top-3 left-3 px-2 py-0.5 rounded text-[10px] font-semibold bg-violet-600 text-white tracking-wide">
-                      {("category" in product && (product as any).category?.name) || ("categoryName" in product && (product as any).categoryName) || "Catalog"}
+                      {product.category?.name || product.categoryName || "Catalog"}
                     </span>
                   </div>
 

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/store/useCartStore";
-import { ShoppingCart, User, ChevronDown, Menu, X, LogOut, Shield, Settings, ShoppingBag } from "lucide-react";
+import { ShoppingCart, User, ChevronDown, Menu, X, LogOut, Shield } from "lucide-react";
 
 const CATEGORIES = [
   { name: "Electronics", slug: "electronics" },
@@ -96,14 +96,6 @@ export default function Navbar() {
               )}
             </div>
 
-            <Link
-              href="/products"
-              className={`text-sm font-medium transition-colors hover:text-white ${
-                pathname.startsWith("/products") && !pathname.includes("category") ? "text-white" : "text-zinc-400"
-              }`}
-            >
-              Shop All
-            </Link>
             
             <Link
               href="/about"
