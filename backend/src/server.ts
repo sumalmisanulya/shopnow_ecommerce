@@ -160,24 +160,24 @@ app.get("/api/products", async (req, res) => {
     const products = await getDbSafe(
       async () => {
         const whereClause: any = { active: true };
-        
+
         if (category) {
           whereClause.category = { slug: category as string };
         }
-        
+
         if (search) {
           whereClause.OR = [
-            { name: { contains: search as string, mode: "insensitive" } },
-            { description: { contains: search as string, mode: "insensitive" } },
+            { name: { contains: search as string } },
+            { description: { contains: search as string } },
           ];
         }
-        
+
         if (minPrice || maxPrice) {
           whereClause.price = {};
           if (minPrice) whereClause.price.gte = parseFloat(minPrice as string);
           if (maxPrice) whereClause.price.lte = parseFloat(maxPrice as string);
         }
-        
+
         if (inStock === "true") {
           whereClause.stock = { gt: 0 };
         }

@@ -1,5 +1,5 @@
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
 }
 
 generator client {
@@ -62,7 +62,7 @@ model Product {
   description String
   price       Float
   stock       Int
-  images      String[]    
+  images      Json
   active      Boolean     @default(true)
   categoryId  String
   category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
