@@ -380,3 +380,6 @@ app.get("/api/invoices/download", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Backend server is running on port ${PORT}`);
 });
+
+export default app;
+
