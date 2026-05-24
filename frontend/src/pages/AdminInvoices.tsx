@@ -26,10 +26,22 @@ export default function AdminInvoicesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mounted, setMounted] = useState(false);
 
+  const fetchOrders = async () => {
+    try {
+      const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const res = await fetch(`${backendUrl}/api/orders`);
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data);
+      }
+    } catch (err) {
+      console.error("Error fetching orders for invoices:", err);
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
-    const localOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
-    setOrders(localOrders);
+    fetchOrders();
   }, []);
 
   const filteredOrders = orders.filter((order) => {
@@ -161,8 +173,8 @@ export default function AdminInvoicesPage() {
                           {status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right font-semibold text-zinc-200">
-                        ${order.totalPrice.toFixed(2)}
+                      <td className="px-6 py-4 text-right font-semibold text-zinc-200 font-sans">
+                        LKR {order.totalPrice.toFixed(2)}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <a

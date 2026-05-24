@@ -129,7 +129,7 @@ export default function ProductsPage() {
                     </div>
                     <div className="flex items-center justify-between mt-5 pt-3 border-t border-white/5">
                       <span className="font-bold text-lg text-zinc-200">
-                        ${product.price.toFixed(2)}
+                        LKR {product.price.toFixed(2)}
                       </span>
                       <span className="text-xs font-semibold text-violet-400 group-hover:text-violet-300 transition-colors flex items-center gap-0.5">
                         Details &rarr;

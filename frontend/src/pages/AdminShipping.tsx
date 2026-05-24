@@ -50,11 +50,23 @@ export default function AdminShippingPage() {
   const [shippingStatus, setShippingStatus] = useState<"PENDING" | "IN_TRANSIT" | "DELIVERED">("PENDING");
   const [editingShippingId, setEditingShippingId] = useState<string | null>(null);
 
+  const fetchOrders = async () => {
+    try {
+      const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const res = await fetch(`${backendUrl}/api/orders`);
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data);
+      }
+    } catch (err) {
+      console.error("Error fetching orders for shipping:", err);
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
-    const localOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
+    fetchOrders();
     const localShippings = JSON.parse(localStorage.getItem("mock_shipping") || "[]");
-    setOrders(localOrders);
     setShippings(localShippings);
   }, []);
 

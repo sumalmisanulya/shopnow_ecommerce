@@ -181,8 +181,8 @@ export default function InvoicePDF({
             <View key={idx} style={styles.tableRow}>
               <Text style={styles.colDesc}>{item.name}</Text>
               <Text style={styles.colQty}>{item.quantity}</Text>
-              <Text style={styles.colPrice}>${item.price.toFixed(2)}</Text>
-              <Text style={styles.colTotal}>${(item.price * item.quantity).toFixed(2)}</Text>
+              <Text style={styles.colPrice}>LKR {item.price.toFixed(2)}</Text>
+              <Text style={styles.colTotal}>LKR {(item.price * item.quantity).toFixed(2)}</Text>
             </View>
           ))}
         </View>
@@ -192,19 +192,19 @@ export default function InvoicePDF({
           <View style={styles.summaryGrid}>
             <View style={styles.summaryRow}>
               <Text style={styles.metaText}>Subtotal</Text>
-              <Text>${subtotal.toFixed(2)}</Text>
+              <Text>LKR {subtotal.toFixed(2)}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.metaText}>Shipping</Text>
-              <Text>{shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}</Text>
+              <Text>{shipping === 0 ? "FREE" : `LKR ${shipping.toFixed(2)}`}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.metaText}>Tax (8%)</Text>
-              <Text>${tax.toFixed(2)}</Text>
+              <Text>LKR {tax.toFixed(2)}</Text>
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalText}>Total Due</Text>
-              <Text style={styles.totalText}>${totalPrice.toFixed(2)}</Text>
+              <Text style={styles.totalText}>LKR {totalPrice.toFixed(2)}</Text>
             </View>
           </View>
         </View>

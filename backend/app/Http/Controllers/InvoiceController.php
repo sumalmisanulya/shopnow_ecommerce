@@ -67,7 +67,37 @@ class InvoiceController extends Controller
         $escapedJsonFile = escapeshellarg($tempJsonFile);
         $escapedPdfFile = escapeshellarg($tempPdfFile);
 
-        $cmd = "node {$escapedScript} {$escapedJsonFile} {$escapedPdfFile}";
+        // Resolve Node binary path
+        $nodeBinary = env('NODE_BINARY', 'node');
+        if ($nodeBinary === 'node') {
+            // Check if node is directly available in PATH, if not try common cPanel Node paths
+            $pathsToTry = [
+                'node',
+                '/usr/local/bin/node',
+                '/usr/bin/node',
+                '/opt/cpanel/ea-nodejs22/bin/node',
+                '/opt/cpanel/ea-nodejs20/bin/node',
+                '/opt/cpanel/ea-nodejs18/bin/node',
+                '/opt/cpanel/ea-nodejs16/bin/node',
+            ];
+            foreach ($pathsToTry as $path) {
+                if ($path === 'node') {
+                    $checkCmd = 'node -v';
+                } else {
+                    $checkCmd = escapeshellarg($path) . ' -v';
+                }
+                $outputCheck = [];
+                $returnValCheck = -1;
+                @exec($checkCmd, $outputCheck, $returnValCheck);
+                if ($returnValCheck === 0) {
+                    $nodeBinary = $path;
+                    break;
+                }
+            }
+        }
+
+        $escapedNodeBinary = $nodeBinary === 'node' ? 'node' : escapeshellarg($nodeBinary);
+        $cmd = "{$escapedNodeBinary} {$escapedScript} {$escapedJsonFile} {$escapedPdfFile}";
 
         // Run compiler process
         $output = [];

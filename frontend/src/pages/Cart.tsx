@@ -98,54 +98,52 @@ export default function CartPage() {
 
     setIsLoading(true);
     try {
-      // Simulate transaction processing delay
-      setTimeout(() => {
-        setIsLoading(false);
-        showToast(
-          paymentMethod === "card"
-            ? "Payment authorized successfully!"
-            : "Order confirmed under Cash on Delivery!",
-          "success"
-        );
+      const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-        const code = "SN-" + Math.floor(100000 + Math.random() * 900000);
-        const mockOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
-        const fullAddress = paymentMethod === "cod" 
+      const payload = {
+        paymentMethod: paymentMethod === "cod" ? "CASH_ON_DELIVERY" : "CARD",
+        shippingAddress: paymentMethod === "cod" 
           ? `${shippingAddress}, ${shippingCity}, ZIP ${shippingZip}` 
-          : "123 Creative Studio, Design District, NY 10001";
-        const finalPhone = paymentMethod === "cod" ? shippingPhone : "+1 (555) 019-2834";
-        const finalReceiver = paymentMethod === "cod" ? shippingName : (user.name || "Customer");
+          : "123 Creative Studio, Design District, NY 10001",
+        phone: paymentMethod === "cod" ? shippingPhone : "+1 (555) 019-2834",
+        userId: user.id,
+        items: items.map(item => ({
+          id: item.id,
+          quantity: item.quantity,
+        })),
+        totalPrice: total,
+      };
 
-        const newOrder = {
-          id: "ord_" + Math.random().toString(36).substring(2, 9),
-          code: code,
-          createdAt: new Date().toISOString(),
-          status: paymentMethod === "cod" ? "PENDING" : "PAID",
-          totalPrice: total,
-          paymentMethod: paymentMethod === "cod" ? "CASH_ON_DELIVERY" : "CARD",
-          shippingAddress: fullAddress,
-          phone: finalPhone,
-          items: items.map(item => ({
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price
-          }))
-        };
-        mockOrders.unshift(newOrder);
-        localStorage.setItem("mock_orders", JSON.stringify(mockOrders));
+      const res = await fetch(`${backendUrl}/api/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-        navigate(
-          `/checkout/success?session_id=mock_${Math.random()
-            .toString(36)
-            .substring(2, 9)}&payment_method=${paymentMethod}&code=${code}&total=${total.toFixed(2)}&shipping_name=${encodeURIComponent(
-            finalReceiver
-          )}&shipping_address=${encodeURIComponent(fullAddress)}&phone=${encodeURIComponent(finalPhone)}`
-        );
-      }, 1500);
-    } catch (err) {
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Checkout failed");
+      }
+
+      const orderData = await res.json();
+
+      showToast(
+        paymentMethod === "card"
+          ? "Payment authorized successfully!"
+          : "Order confirmed under Cash on Delivery!",
+        "success"
+      );
+
+      navigate(
+        `/checkout/success?session_id=${orderData.id}&payment_method=${paymentMethod}&code=${orderData.code}&total=${orderData.total_price || orderData.totalPrice}&shipping_name=${encodeURIComponent(
+          paymentMethod === "cod" ? shippingName : user.name
+        )}&shipping_address=${encodeURIComponent(orderData.shipping_address || orderData.shippingAddress)}&phone=${encodeURIComponent(orderData.phone)}`
+      );
+    } catch (err: any) {
       console.error(err);
+      showToast(err.message || "An error occurred during checkout.", "error");
+    } finally {
       setIsLoading(false);
-      showToast("An error occurred during checkout.", "error");
     }
   };
 
@@ -198,7 +196,7 @@ export default function CartPage() {
                   >
                     {item.name}
                   </Link>
-                  <p className="text-xs text-zinc-500 mt-0.5 font-medium">${item.price.toFixed(2)} each</p>
+                  <p className="text-xs text-zinc-500 mt-0.5 font-medium">LKR {item.price.toFixed(2)} each</p>
                 </div>
               </div>
 
@@ -224,7 +222,7 @@ export default function CartPage() {
 
                 <div className="flex items-center gap-4">
                   <span className="font-bold text-sm text-zinc-200 w-16 text-right font-sans">
-                    ${(item.price * item.quantity).toFixed(2)}
+                    LKR {(item.price * item.quantity).toFixed(2)}
                   </span>
                   <button
                     onClick={() => {
@@ -260,7 +258,7 @@ export default function CartPage() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between text-zinc-400">
                 <span>Subtotal</span>
-                <span className="text-zinc-200 font-medium">${subtotal.toFixed(2)}</span>
+                <span className="text-zinc-200 font-medium">LKR {subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-zinc-400">
                 <span>Shipping</span>
@@ -268,25 +266,25 @@ export default function CartPage() {
                   {shipping === 0 ? (
                     <span className="text-emerald-400 font-semibold">FREE</span>
                   ) : (
-                    `$${shipping.toFixed(2)}`
+                    `LKR ${shipping.toFixed(2)}`
                   )}
                 </span>
               </div>
               <div className="flex justify-between text-zinc-400">
                 <span>Tax (Est. 8%)</span>
-                <span className="text-zinc-200 font-medium">${tax.toFixed(2)}</span>
+                <span className="text-zinc-200 font-medium">LKR {tax.toFixed(2)}</span>
               </div>
               
               {shipping > 0 && (
                 <div className="bg-violet-600/5 border border-violet-500/10 rounded-lg p-2.5 text-xs text-violet-300 text-center font-sans">
-                  Add <span className="font-bold">${(100 - subtotal).toFixed(2)}</span> more to unlock <span className="font-bold">FREE Shipping</span>!
+                  Add <span className="font-bold">LKR {(100 - subtotal).toFixed(2)}</span> more to unlock <span className="font-bold">FREE Shipping</span>!
                 </div>
               )}
               
               <div className="border-t border-white/5 pt-4 flex justify-between font-bold text-base text-zinc-100">
                 <span>Total</span>
                 <span className="text-xl bg-gradient-to-r from-violet-300 to-amber-300 bg-clip-text text-transparent">
-                  ${total.toFixed(2)}
+                  LKR {total.toFixed(2)}
                 </span>
               </div>
             </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MOCK_PRODUCTS, MOCK_CATEGORIES } from "@/lib/mockData";
+import { MOCK_CATEGORIES } from "@/lib/mockData";
 import type { MockProduct } from "@/lib/mockData";
 import { useToastStore } from "@/store/useToastStore";
 import { Plus, Edit, Trash2 } from "lucide-react";
@@ -21,22 +21,30 @@ export default function AdminProductsPage() {
   const [imageUrl, setImageUrl] = useState("");
 
   useEffect(() => {
-    // Load mock database products from localstorage or initialize with MOCK_PRODUCTS
-    const dbProducts = localStorage.getItem("mock_db_products");
-    if (dbProducts) {
-      setProducts(JSON.parse(dbProducts));
-    } else {
-      setProducts(MOCK_PRODUCTS);
-      localStorage.setItem("mock_db_products", JSON.stringify(MOCK_PRODUCTS));
-    }
+    const fetchProducts = async () => {
+      try {
+        const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const res = await fetch(`${backendUrl}/api/products`);
+        if (res.ok) {
+          const data = await res.json();
+          // Map categoryId from category_id in case it is snake_case
+          const mapped = data.map((p: any) => ({
+            ...p,
+            categoryId: p.category_id || p.categoryId,
+            categoryName: p.categoryName || (p.category ? p.category.name : "Catalog"),
+          }));
+          setProducts(mapped);
+        } else {
+          console.error("Failed to fetch products:", res.statusText);
+        }
+      } catch (err) {
+        console.error("Error fetching products:", err);
+      }
+    };
+    fetchProducts();
   }, []);
 
-  const saveProducts = (updatedProds: MockProduct[]) => {
-    setProducts(updatedProds);
-    localStorage.setItem("mock_db_products", JSON.stringify(updatedProds));
-  };
-
-  const handleCreateOrUpdate = (e: React.FormEvent) => {
+  const handleCreateOrUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name || !slug || !description || !price || !stock) {
@@ -48,57 +56,82 @@ export default function AdminProductsPage() {
     const stockNum = parseInt(stock);
     const selectedCategory = MOCK_CATEGORIES.find((c) => c.id === categoryId);
     const categoryName = selectedCategory ? selectedCategory.name : "Catalog";
-
-    // Standard fallback image if none provided
     const finalImg = imageUrl || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80";
 
-    if (isEditing && editingId) {
-      // Update
-      const updated = products.map((p) => {
-        if (p.id === editingId) {
-          return {
-            ...p,
-            name,
-            slug,
-            description,
-            price: priceNum,
-            stock: stockNum,
-            categoryId,
-            categoryName,
-            images: [finalImg],
-          };
-        }
-        return p;
-      });
-      saveProducts(updated);
-      showToast("Product updated successfully!", "success");
-      setIsEditing(false);
-      setEditingId(null);
-    } else {
-      // Create
-      const newProd: MockProduct = {
-        id: "prod-" + Math.floor(1000 + Math.random() * 9000),
-        name,
-        slug,
-        description,
-        price: priceNum,
-        stock: stockNum,
-        categoryId,
-        categoryName,
-        images: [finalImg],
-        active: true,
-      };
-      saveProducts([newProd, ...products]);
-      showToast("Product created successfully!", "success");
-    }
+    const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    const payload = {
+      name,
+      slug,
+      description,
+      price: priceNum,
+      stock: stockNum,
+      category_id: categoryId,
+      images: [finalImg],
+    };
 
-    // Reset Form
-    setName("");
-    setSlug("");
-    setDescription("");
-    setPrice("");
-    setStock("");
-    setImageUrl("");
+    try {
+      if (isEditing && editingId) {
+        // Update
+        const res = await fetch(`${backendUrl}/api/products/${editingId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+          const updatedProduct = await res.json();
+          const updated = products.map((p) => {
+            if (p.id === editingId) {
+              return {
+                ...updatedProduct,
+                categoryId: updatedProduct.category_id || updatedProduct.categoryId,
+                categoryName,
+              };
+            }
+            return p;
+          });
+          setProducts(updated);
+          showToast("Product updated successfully!", "success");
+          setIsEditing(false);
+          setEditingId(null);
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          showToast(errData.error || "Failed to update product.", "error");
+        }
+      } else {
+        // Create
+        const res = await fetch(`${backendUrl}/api/products`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+          const newProduct = await res.json();
+          const mappedNew = {
+            ...newProduct,
+            categoryId: newProduct.category_id || newProduct.categoryId,
+            categoryName,
+          };
+          setProducts([mappedNew, ...products]);
+          showToast("Product created successfully!", "success");
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          showToast(errData.error || "Failed to create product.", "error");
+        }
+      }
+
+      // Reset Form
+      setName("");
+      setSlug("");
+      setDescription("");
+      setPrice("");
+      setStock("");
+      setImageUrl("");
+    } catch (err) {
+      console.error(err);
+      showToast("Error saving product.", "error");
+    }
   };
 
   const handleEditClick = (p: MockProduct) => {
@@ -109,14 +142,27 @@ export default function AdminProductsPage() {
     setDescription(p.description);
     setPrice(String(p.price));
     setStock(String(p.stock));
-    setCategoryId(p.categoryId);
+    setCategoryId(p.categoryId || (p as any).category_id);
     setImageUrl(p.images[0] || "");
   };
 
-  const handleDelete = (id: string) => {
-    const updated = products.filter((p) => p.id !== id);
-    saveProducts(updated);
-    showToast("Product deleted from sandbox.", "info");
+  const handleDelete = async (id: string) => {
+    const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    try {
+      const res = await fetch(`${backendUrl}/api/products/${id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        setProducts(products.filter((p) => p.id !== id));
+        showToast("Product deleted successfully.", "info");
+      } else {
+        showToast("Failed to delete product.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Error deleting product.", "error");
+    }
   };
 
   return (
@@ -182,7 +228,7 @@ export default function AdminProductsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 font-sans">
-                    Price ($)
+                    Price (LKR)
                   </label>
                   <input
                     type="number"
@@ -301,7 +347,7 @@ export default function AdminProductsPage() {
                       </td>
                       <td className="px-6 py-4 text-zinc-400">{p.categoryName}</td>
                       <td className="px-6 py-4 text-center font-semibold text-zinc-200">
-                        ${p.price.toFixed(2)}
+                        LKR {p.price.toFixed(2)}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span

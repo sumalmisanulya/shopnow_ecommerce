@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { MOCK_PRODUCTS } from "@/lib/mockData";
-import type { MockProduct } from "@/lib/mockData";
 import {
   DollarSign,
   ShoppingBag,
@@ -33,19 +31,33 @@ export default function AdminDashboardPage() {
   const [lowStockCount, setLowStockCount] = useState(0);
 
   useEffect(() => {
-    // Load mock orders
-    const localOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
-    setOrders(localOrders);
+    const fetchData = async () => {
+      try {
+        const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-    // Load mock returns
-    const localReturns = JSON.parse(localStorage.getItem("mock_returns") || "[]");
-    setReturnsCount(localReturns.filter((r: { status: string }) => r.status === "PENDING").length);
+        // Fetch orders from database
+        const resOrders = await fetch(`${backendUrl}/api/orders`);
+        if (resOrders.ok) {
+          const fetchedOrders = await resOrders.json();
+          setOrders(fetchedOrders);
+        }
 
-    // Calculate low stock products (stock <= 5)
-    const dbProducts = JSON.parse(localStorage.getItem("mock_db_products") || "[]") as MockProduct[];
-    const catalog: MockProduct[] = dbProducts.length > 0 ? dbProducts : MOCK_PRODUCTS;
-    const lowStock = catalog.filter((p: MockProduct) => p.stock <= 5).length;
-    setLowStockCount(lowStock);
+        // Calculate low stock products from database
+        const resProducts = await fetch(`${backendUrl}/api/products`);
+        if (resProducts.ok) {
+          const catalog = await resProducts.json();
+          const lowStock = catalog.filter((p: any) => p.stock <= 5).length;
+          setLowStockCount(lowStock);
+        }
+
+        // Load mock returns
+        const localReturns = JSON.parse(localStorage.getItem("mock_returns") || "[]");
+        setReturnsCount(localReturns.filter((r: { status: string }) => r.status === "PENDING").length);
+      } catch (err) {
+        console.error("Error fetching admin stats:", err);
+      }
+    };
+    fetchData();
   }, []);
 
   // Compute stats
@@ -55,7 +67,7 @@ export default function AdminDashboardPage() {
   const statCards = [
     {
       title: "Total Sales",
-      value: `$${totalSales.toFixed(2)}`,
+      value: `LKR ${totalSales.toFixed(2)}`,
       desc: "Simulated order volume",
       icon: DollarSign,
       color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"

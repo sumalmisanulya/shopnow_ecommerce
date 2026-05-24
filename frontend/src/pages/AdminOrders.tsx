@@ -39,38 +39,73 @@ export default function AdminOrdersPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-    const localOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
-    setOrders(localOrders);
-  }, []);
-
-  const saveOrders = (updatedOrders: Order[]) => {
-    setOrders(updatedOrders);
-    localStorage.setItem("mock_orders", JSON.stringify(updatedOrders));
-  };
-
-  const handleStatusChange = (orderId: string, newStatus: string) => {
-    const updated = orders.map((order) => {
-      if (order.id === orderId) {
-        return { ...order, status: newStatus };
+  const fetchOrders = async () => {
+    try {
+      const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const res = await fetch(`${backendUrl}/api/orders`);
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data);
+      } else {
+        throw new Error("Failed to fetch orders from server");
       }
-      return order;
-    });
-    saveOrders(updated);
-    showToast(`Order status updated to ${newStatus}`, "success");
-    if (selectedOrder && selectedOrder.id === orderId) {
-      setSelectedOrder({ ...selectedOrder, status: newStatus });
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message || "Failed to load orders from database", "error");
     }
   };
 
-  const handleDeleteOrder = (orderId: string) => {
-    if (confirm("Are you sure you want to delete this order from history?")) {
-      const updated = orders.filter((order) => order.id !== orderId);
-      saveOrders(updated);
-      showToast("Order removed from database", "info");
+  useEffect(() => {
+    setMounted(true);
+    fetchOrders();
+  }, []);
+
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    try {
+      const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const res = await fetch(`${backendUrl}/api/orders/${orderId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to update status");
+      }
+      const updatedOrder = await res.json();
+      
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? updatedOrder : o)));
+      showToast(`Order status updated to ${newStatus}`, "success");
       if (selectedOrder && selectedOrder.id === orderId) {
-        setIsDetailOpen(false);
+        setSelectedOrder(updatedOrder);
+      }
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message || "Failed to update order status", "error");
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (confirm("Are you sure you want to delete this order from history?")) {
+      try {
+        const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const res = await fetch(`${backendUrl}/api/orders/${orderId}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || "Failed to delete order");
+        }
+        
+        setOrders((prev) => prev.filter((o) => o.id !== orderId));
+        showToast("Order removed from database", "info");
+        if (selectedOrder && selectedOrder.id === orderId) {
+          setIsDetailOpen(false);
+          setSelectedOrder(null);
+        }
+      } catch (err: any) {
+        console.error(err);
+        showToast(err.message || "Failed to delete order", "error");
       }
     }
   };
@@ -198,7 +233,7 @@ export default function AdminOrdersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right font-semibold text-zinc-200">
-                        ${order.totalPrice.toFixed(2)}
+                        LKR {order.totalPrice.toFixed(2)}
                       </td>
                       <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-2">
@@ -321,17 +356,17 @@ export default function AdminOrdersPage() {
                     <div key={idx} className="flex justify-between items-center bg-white/5 border border-white/5 rounded-xl p-3 text-xs">
                       <div>
                         <p className="font-bold text-zinc-200">{item.name}</p>
-                        <p className="text-zinc-500 mt-0.5">{item.quantity} x ${item.price.toFixed(2)}</p>
+                        <p className="text-zinc-500 mt-0.5">{item.quantity} x LKR {item.price.toFixed(2)}</p>
                       </div>
                       <span className="font-semibold text-zinc-300">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        LKR {(item.price * item.quantity).toFixed(2)}
                       </span>
                     </div>
                   ))}
                 </div>
                 <div className="flex justify-between items-center pt-2 font-bold text-zinc-200 border-t border-white/5 text-sm">
                   <span>Grand Total</span>
-                  <span className="text-violet-400 text-base">${selectedOrder.totalPrice.toFixed(2)}</span>
+                  <span className="text-violet-400 text-base">LKR {selectedOrder.totalPrice.toFixed(2)}</span>
                 </div>
               </div>
             </div>

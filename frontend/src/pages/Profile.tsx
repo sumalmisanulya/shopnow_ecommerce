@@ -42,12 +42,22 @@ export default function ProfilePage() {
   }, [status, navigate]);
 
   useEffect(() => {
-    if (status === "authenticated") {
-      // Pull simulated orders from localstorage
-      const localOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]");
-      setOrders(localOrders);
-    }
-  }, [status]);
+    const fetchOrders = async () => {
+      if (status === "authenticated" && user) {
+        try {
+          const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+          const res = await fetch(`${backendUrl}/api/orders/user/${user.id}`);
+          if (res.ok) {
+            const data = await res.json();
+            setOrders(data);
+          }
+        } catch (err) {
+          console.error("Error fetching orders:", err);
+        }
+      }
+    };
+    fetchOrders();
+  }, [status, user]);
 
   const handleReturnSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,7 +165,7 @@ export default function ProfilePage() {
                     .filter((ord) => ord.status === "PENDING" || ord.status === "CONFIRMED" || ord.status === "PAID")
                     .map((ord) => (
                       <option key={ord.code} value={ord.code} className="bg-zinc-950">
-                        {ord.code} (${ord.totalPrice.toFixed(2)})
+                        {ord.code} (LKR {ord.totalPrice.toFixed(2)})
                       </option>
                     ))}
                 </select>
@@ -239,14 +249,14 @@ export default function ProfilePage() {
                           <span className="text-zinc-300">
                             {item.name} <span className="text-xs text-zinc-555 font-bold">x {item.quantity}</span>
                           </span>
-                          <span className="text-zinc-200 font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                          <span className="text-zinc-200 font-medium">LKR {(item.price * item.quantity).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
 
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-5 pt-3.5 border-t border-white/5 font-sans">
                       <p className="text-sm font-bold text-zinc-200">
-                        Total Price: <span className="text-violet-450">${ord.totalPrice.toFixed(2)}</span>
+                        Total Price: <span className="text-violet-450">LKR {ord.totalPrice.toFixed(2)}</span>
                       </p>
                       
                       <div className="flex gap-2 w-full sm:w-auto">

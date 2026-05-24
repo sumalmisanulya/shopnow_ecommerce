@@ -141,7 +141,7 @@ export default function ProductDetailPage() {
             <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-100 leading-tight">
               {product.name}
             </h1>
-            <p className="text-2xl font-bold text-zinc-100">${product.price.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-zinc-100">LKR {product.price.toFixed(2)}</p>
 
             {/* Stock Level Indicator */}
             <div className="flex items-center gap-2 text-sm pt-2">
@@ -246,7 +246,7 @@ export default function ProductDetailPage() {
                 <div className="space-y-3">
                   <div className="flex gap-2.5 items-start">
                     <Truck className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
-                    <p>Free standard worldwide shipping on orders above $100. Dispatched within 24-48 business hours.</p>
+                    <p>Free standard worldwide shipping on orders above LKR 10,000. Dispatched within 24-48 business hours.</p>
                   </div>
                   <div className="flex gap-2.5 items-start">
                     <ShieldCheck className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
