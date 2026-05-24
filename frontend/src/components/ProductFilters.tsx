@@ -1,14 +1,12 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useState } from "react";
 import { Search, Filter } from "lucide-react";
 import { MOCK_CATEGORIES } from "@/lib/mockData";
 
 export default function ProductFilters() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Local state initialized from searchParams
   const [search, setSearch] = useState(searchParams.get("search") || "");
@@ -27,9 +25,7 @@ export default function ProductFilters() {
       params.set(key, String(value));
     }
     
-    startTransition(() => {
-      router.push(`/products?${params.toString()}`);
-    });
+    setSearchParams(params);
   };
 
   const handleReset = () => {
@@ -37,9 +33,7 @@ export default function ProductFilters() {
     setMinPrice("");
     setMaxPrice("");
     setInStock(false);
-    startTransition(() => {
-      router.push("/products");
-    });
+    setSearchParams({});
   };
 
   return (
@@ -52,7 +46,7 @@ export default function ProductFilters() {
         {(search || minPrice || maxPrice || inStock || currentCategory) && (
           <button
             onClick={handleReset}
-            className="text-xs font-semibold text-rose-400 hover:text-rose-300 transition-colors"
+            className="text-xs font-semibold text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
           >
             Reset All
           </button>
@@ -87,7 +81,7 @@ export default function ProductFilters() {
         <div className="flex flex-col gap-2">
           <button
             onClick={() => updateFilters("category", "")}
-            className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${
+            className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer ${
               currentCategory === ""
                 ? "bg-violet-600/20 text-violet-300 border border-violet-500/20 font-medium"
                 : "text-zinc-400 hover:text-zinc-200"
@@ -99,7 +93,7 @@ export default function ProductFilters() {
             <button
               key={cat.slug}
               onClick={() => updateFilters("category", cat.slug)}
-              className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${
+              className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer ${
                 currentCategory === cat.slug
                   ? "bg-violet-600/20 text-violet-300 border border-violet-500/20 font-medium"
                   : "text-zinc-400 hover:text-zinc-200"
@@ -151,18 +145,12 @@ export default function ProductFilters() {
             setInStock(e.target.checked);
             updateFilters("inStock", e.target.checked);
           }}
-          className="w-4 h-4 rounded border-white/10 bg-white/5 text-violet-600 focus:ring-violet-500"
+          className="w-4 h-4 rounded border-white/10 bg-white/5 text-violet-600 focus:ring-violet-500 cursor-pointer"
         />
         <label htmlFor="inStockOnly" className="text-sm text-zinc-300 cursor-pointer select-none">
           In Stock Only
         </label>
       </div>
-
-      {isPending && (
-        <div className="text-xs text-zinc-500 text-center animate-pulse">
-          Applying updates...
-        </div>
-      )}
     </div>
   );
 }

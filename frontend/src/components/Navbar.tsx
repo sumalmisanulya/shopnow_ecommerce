@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useCartStore } from "@/store/useCartStore";
 import { ShoppingCart, User, ChevronDown, Menu, X, LogOut, Shield } from "lucide-react";
 
@@ -16,8 +15,10 @@ const CATEGORIES = [
 ];
 
 export default function Navbar() {
-  const pathname = usePathname();
-  const { data: session } = useSession();
+  const location = useLocation();
+  const pathname = location.pathname;
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
   const [isOpen, setIsOpen] = useState(false);
   const [isCatOpen, setIsCatOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -45,7 +46,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="text-xl font-bold tracking-tight bg-gradient-to-r from-violet-400 via-pink-400 to-amber-400 bg-clip-text text-transparent hover:opacity-90 transition-opacity">
+            <Link to="/" className="text-xl font-bold tracking-tight bg-gradient-to-r from-violet-400 via-pink-400 to-amber-400 bg-clip-text text-transparent hover:opacity-90 transition-opacity">
               ShopNow
             </Link>
           </div>
@@ -53,7 +54,7 @@ export default function Navbar() {
           {/* Desktop Nav Items */}
           <div className="hidden md:flex items-center space-x-6">
             <Link
-              href="/"
+              to="/"
               className={`text-sm font-medium transition-colors hover:text-white ${
                 pathname === "/" ? "text-white" : "text-zinc-400"
               }`}
@@ -77,7 +78,7 @@ export default function Navbar() {
               {isCatOpen && (
                 <div className="absolute left-0 mt-2 w-48 rounded-xl glass border border-white/5 shadow-2xl p-1 animate-slide-in">
                   <Link
-                    href="/products"
+                    to="/products"
                     className="block px-4 py-2 text-sm rounded-lg hover:bg-white/5 text-zinc-300 hover:text-white transition-colors"
                   >
                     All Products
@@ -86,7 +87,7 @@ export default function Navbar() {
                   {CATEGORIES.map((cat) => (
                     <Link
                       key={cat.slug}
-                      href={`/products?category=${cat.slug}`}
+                      to={`/products?category=${cat.slug}`}
                       className="block px-4 py-2 text-sm rounded-lg hover:bg-white/5 text-zinc-300 hover:text-white transition-colors"
                     >
                       {cat.name}
@@ -98,7 +99,7 @@ export default function Navbar() {
 
             
             <Link
-              href="/about"
+              to="/about"
               className={`text-sm font-medium transition-colors hover:text-white ${
                 pathname === "/about" ? "text-white" : "text-zinc-400"
               }`}
@@ -107,7 +108,7 @@ export default function Navbar() {
             </Link>
 
             <Link
-              href="/contact"
+              to="/contact"
               className={`text-sm font-medium transition-colors hover:text-white ${
                 pathname === "/contact" ? "text-white" : "text-zinc-400"
               }`}
@@ -120,7 +121,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-4">
             {/* Cart Icon */}
             <Link
-              href="/cart"
+              to="/cart"
               className="relative p-2 text-zinc-400 hover:text-white transition-colors hover:bg-white/5 rounded-lg"
             >
               <ShoppingCart className="w-5 h-5" />
@@ -132,7 +133,7 @@ export default function Navbar() {
             </Link>
 
             {/* Profile Dropdown */}
-            {session ? (
+            {user ? (
               <div className="relative">
                 <button
                   onClick={() => {
@@ -142,9 +143,9 @@ export default function Navbar() {
                   className="flex items-center gap-2 p-1.5 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/10 transition-all text-sm font-medium text-zinc-200 focus:outline-none"
                 >
                   <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-violet-500 to-pink-500 flex items-center justify-center text-[10px] text-white font-bold uppercase">
-                    {session.user?.name?.slice(0, 2) || "U"}
+                    {user.name?.slice(0, 2) || "U"}
                   </div>
-                  <span className="max-w-[100px] truncate">{session.user?.name || "Profile"}</span>
+                  <span className="max-w-[100px] truncate">{user.name || "Profile"}</span>
                   <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
                 </button>
 
@@ -152,20 +153,20 @@ export default function Navbar() {
                   <div className="absolute right-0 mt-2 w-52 rounded-xl glass border border-white/5 shadow-2xl p-1 animate-slide-in">
                     <div className="px-4 py-2 border-b border-white/5">
                       <p className="text-xs text-zinc-400">Signed in as</p>
-                      <p className="text-sm font-semibold truncate text-zinc-200">{session.user?.email}</p>
+                      <p className="text-sm font-semibold truncate text-zinc-200">{user.email}</p>
                     </div>
 
                     <Link
-                      href="/profile"
+                      to="/profile"
                       className="flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg hover:bg-white/5 text-zinc-300 hover:text-white transition-colors mt-1"
                     >
                       <User className="w-4 h-4" />
                       My Dashboard
                     </Link>
 
-                    {session.user?.role === "ADMIN" && (
+                    {user.role === "ADMIN" && (
                       <Link
-                        href="/admin"
+                        to="/admin"
                         className="flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg bg-violet-600/10 hover:bg-violet-600/20 text-violet-300 hover:text-violet-200 transition-colors mt-1"
                       >
                         <Shield className="w-4 h-4" />
@@ -176,8 +177,8 @@ export default function Navbar() {
                     <div className="h-px bg-white/5 my-1" />
 
                     <button
-                      onClick={() => signOut({ callbackUrl: "/" })}
-                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 transition-colors text-left"
+                      onClick={() => logout()}
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 transition-colors text-left cursor-pointer"
                     >
                       <LogOut className="w-4 h-4" />
                       Sign Out
@@ -187,7 +188,7 @@ export default function Navbar() {
               </div>
             ) : (
               <Link
-                href="/login"
+                to="/login"
                 className="px-4 py-2 text-sm font-semibold rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 transition-colors"
               >
                 Sign In
@@ -198,7 +199,7 @@ export default function Navbar() {
           {/* Mobile Menu Button */}
           <div className="flex md:hidden items-center space-x-2">
             <Link
-              href="/cart"
+              to="/cart"
               className="relative p-2 text-zinc-400 hover:text-white transition-colors"
             >
               <ShoppingCart className="w-5 h-5" />
@@ -222,7 +223,7 @@ export default function Navbar() {
       {isOpen && (
         <div className="md:hidden glass border-b border-white/5 animate-slide-in px-4 pt-2 pb-4 space-y-2">
           <Link
-            href="/"
+            to="/"
             className={`block px-3 py-2 rounded-lg text-base font-medium ${
               pathname === "/" ? "bg-white/5 text-white" : "text-zinc-400 hover:text-white"
             }`}
@@ -236,14 +237,14 @@ export default function Navbar() {
               {CATEGORIES.map((cat) => (
                 <Link
                   key={cat.slug}
-                  href={`/products?category=${cat.slug}`}
+                  to={`/products?category=${cat.slug}`}
                   className="block px-2 py-1 text-sm rounded hover:bg-white/5 text-zinc-400 hover:text-white"
                 >
                   {cat.name}
                 </Link>
               ))}
               <Link
-                href="/products"
+                to="/products"
                 className="block px-2 py-1 text-sm rounded hover:bg-white/5 text-zinc-400 hover:text-white"
               >
                 All Products
@@ -252,7 +253,7 @@ export default function Navbar() {
           </div>
 
           <Link
-            href="/about"
+            to="/about"
             className={`block px-3 py-2 rounded-lg text-base font-medium ${
               pathname === "/about" ? "bg-white/5 text-white" : "text-zinc-400 hover:text-white"
             }`}
@@ -261,7 +262,7 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/contact"
+            to="/contact"
             className={`block px-3 py-2 rounded-lg text-base font-medium ${
               pathname === "/contact" ? "bg-white/5 text-white" : "text-zinc-400 hover:text-white"
             }`}
@@ -271,24 +272,24 @@ export default function Navbar() {
 
           <div className="h-px bg-white/5 my-2" />
 
-          {session ? (
+          {user ? (
             <div className="space-y-1 pt-1">
               <div className="px-3 py-2">
                 <p className="text-xs text-zinc-400">Signed in as</p>
-                <p className="text-sm font-semibold truncate text-zinc-200">{session.user?.name || session.user?.email}</p>
+                <p className="text-sm font-semibold truncate text-zinc-200">{user.name || user.email}</p>
               </div>
 
               <Link
-                href="/profile"
+                to="/profile"
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-400 hover:text-white text-base font-medium"
               >
                 <User className="w-5 h-5" />
                 My Dashboard
               </Link>
 
-              {session.user?.role === "ADMIN" && (
+              {user.role === "ADMIN" && (
                 <Link
-                  href="/admin"
+                  to="/admin"
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-violet-300 hover:text-violet-200 bg-violet-600/5 text-base font-medium"
                 >
                   <Shield className="w-5 h-5" />
@@ -297,7 +298,7 @@ export default function Navbar() {
               )}
 
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => logout()}
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-rose-400 hover:text-rose-300 text-base font-medium text-left"
               >
                 <LogOut className="w-5 h-5" />
@@ -306,7 +307,7 @@ export default function Navbar() {
             </div>
           ) : (
             <Link
-              href="/login"
+              to="/login"
               className="block w-full text-center px-4 py-2.5 text-base font-semibold rounded-lg bg-zinc-100 text-zinc-950 hover:bg-white transition-colors"
             >
               Sign In

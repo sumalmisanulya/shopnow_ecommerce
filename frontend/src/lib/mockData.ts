@@ -107,15 +107,4 @@ export const MOCK_PRODUCTS: MockProduct[] = [
   },
 ];
 
-// Helper to check if DB is connected/configured
-export async function getDbSafe<T>(dbQueryFn: () => Promise<T>, fallback: T): Promise<T> {
-  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("localhost:51214")) {
-    return fallback;
-  }
-  try {
-    return await dbQueryFn();
-  } catch (err) {
-    console.error("Database connection failed, using mock data fallback.", err);
-    return fallback;
-  }
-}
+
