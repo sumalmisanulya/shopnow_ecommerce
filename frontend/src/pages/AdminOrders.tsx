@@ -112,11 +112,15 @@ export default function AdminOrdersPage() {
 
   const filteredOrders = orders.filter((order) => {
     const query = searchQuery.toLowerCase();
+    const code = order.code ? order.code.toLowerCase() : "";
+    const address = order.shippingAddress ? order.shippingAddress.toLowerCase() : "";
+    const phone = order.phone ? order.phone.toLowerCase() : "";
+    const method = order.paymentMethod ? order.paymentMethod.toLowerCase() : "";
     return (
-      order.code.toLowerCase().includes(query) ||
-      order.shippingAddress.toLowerCase().includes(query) ||
-      order.phone.includes(query) ||
-      order.paymentMethod.toLowerCase().includes(query)
+      code.includes(query) ||
+      address.includes(query) ||
+      phone.includes(query) ||
+      method.includes(query)
     );
   });
 
@@ -160,7 +164,7 @@ export default function AdminOrdersPage() {
           <h1 className="text-3xl font-extrabold text-zinc-100 font-sans">Orders Grid</h1>
           <p className="text-sm text-zinc-500 mt-1 font-sans">Monitor payments, dispatch status, and client purchases.</p>
         </div>
-        <div className="flex items-center gap-3 bg-zinc-955/40 border border-white/5 px-4 py-2 rounded-xl">
+        <div className="flex items-center gap-3 bg-zinc-900/40 border border-white/5 px-4 py-2 rounded-xl">
           <ListOrdered className="w-5 h-5 text-violet-400" />
           <span className="text-sm font-bold text-zinc-300 font-sans">{orders.length} total orders</span>
         </div>
@@ -217,23 +221,23 @@ export default function AdminOrdersPage() {
                       }}
                     >
                       <td className="px-6 py-4 font-mono font-bold text-violet-400">
-                        {order.code}
+                        {order.code || "N/A"}
                       </td>
                       <td className="px-6 py-4 text-xs text-zinc-400">
-                        {new Date(order.createdAt).toLocaleDateString(undefined, {
+                        {order.createdAt ? new Date(order.createdAt).toLocaleDateString(undefined, {
                           month: "short",
                           day: "numeric",
                           hour: "2-digit",
                           minute: "2-digit"
-                        })}
+                        }) : "N/A"}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${getStatusBadge(order.status)}`}>
-                          {order.status}
+                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${getStatusBadge(order.status || "PENDING")}`}>
+                          {order.status || "PENDING"}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right font-semibold text-zinc-200">
-                        LKR {order.totalPrice.toFixed(2)}
+                        LKR {(order.totalPrice || 0).toFixed(2)}
                       </td>
                       <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-2">
@@ -265,19 +269,22 @@ export default function AdminOrdersPage() {
         </div>
 
         {/* Selected Order Details panel */}
-        <div className="lg:col-span-1">
+        <div className={
+          isDetailOpen && selectedOrder
+            ? "fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 lg:relative lg:inset-auto lg:z-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none lg:col-span-1"
+            : "lg:col-span-1 hidden lg:block"
+        }>
           {isDetailOpen && selectedOrder ? (
-            <div className="glass p-6 rounded-2xl border border-white/5 text-left space-y-6 animate-slide-in">
+            <div className="glass p-6 rounded-2xl border border-white/10 bg-zinc-950/95 lg:bg-transparent text-left space-y-6 animate-slide-in w-full max-w-lg lg:max-w-none shadow-2xl lg:shadow-none overflow-y-auto max-h-[90vh] lg:max-h-none">
               <div className="flex justify-between items-start border-b border-white/5 pb-4">
                 <div>
-                  <span className="text-xs font-semibold text-zinc-505 uppercase font-sans">Order Details</span>
                   <h3 className="text-lg font-bold text-zinc-200 font-mono mt-0.5 text-violet-400">
-                    {selectedOrder.code}
+                    {selectedOrder.code || "N/A"}
                   </h3>
                 </div>
                 <button
                   onClick={() => setIsDetailOpen(false)}
-                  className="text-zinc-500 hover:text-zinc-300 p-1 cursor-pointer"
+                  className="text-zinc-400 hover:text-zinc-200 p-1 cursor-pointer bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
                 >
                   <XCircle className="w-5 h-5" />
                 </button>
@@ -290,7 +297,7 @@ export default function AdminOrdersPage() {
                 </label>
                 <div className="relative">
                   <select
-                    value={selectedOrder.status}
+                    value={selectedOrder.status || "PENDING"}
                     onChange={(e) => handleStatusChange(selectedOrder.id, e.target.value)}
                     className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-zinc-200 focus:outline-none focus:border-violet-500 cursor-pointer"
                   >
@@ -310,7 +317,7 @@ export default function AdminOrdersPage() {
                   <div>
                     <p className="text-xs text-zinc-500 font-semibold uppercase">Order Date</p>
                     <p className="text-zinc-300 mt-0.5">
-                      {new Date(selectedOrder.createdAt).toLocaleString()}
+                      {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleString() : "N/A"}
                     </p>
                   </div>
                 </div>
@@ -319,8 +326,8 @@ export default function AdminOrdersPage() {
                   <CreditCard className="w-4.5 h-4.5 text-zinc-500 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs text-zinc-500 font-semibold uppercase">Payment Mode</p>
-                    <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold border ${getPaymentBadge(selectedOrder.paymentMethod)}`}>
-                      {selectedOrder.paymentMethod.replace(/_/g, " ")}
+                    <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold border ${getPaymentBadge(selectedOrder.paymentMethod || "CARD")}`}>
+                      {(selectedOrder.paymentMethod || "CARD").replace(/_/g, " ")}
                     </span>
                   </div>
                 </div>
@@ -329,8 +336,8 @@ export default function AdminOrdersPage() {
                   <MapPin className="w-4.5 h-4.5 text-zinc-500 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs text-zinc-500 font-semibold uppercase">Delivery Address</p>
-                    <p className="text-zinc-300 mt-0.5 leading-relaxed">
-                      {selectedOrder.shippingAddress}
+                    <p className="text-zinc-305 mt-0.5 leading-relaxed">
+                      {selectedOrder.shippingAddress || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -339,8 +346,8 @@ export default function AdminOrdersPage() {
                   <Phone className="w-4.5 h-4.5 text-zinc-500 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs text-zinc-500 font-semibold uppercase">Phone Number</p>
-                    <p className="text-zinc-300 mt-0.5">
-                      {selectedOrder.phone}
+                    <p className="text-zinc-305 mt-0.5">
+                      {selectedOrder.phone || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -352,27 +359,27 @@ export default function AdminOrdersPage() {
                   Purchased Items
                 </h4>
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-                  {selectedOrder.items.map((item, idx) => (
+                  {(selectedOrder.items || []).map((item, idx) => (
                     <div key={idx} className="flex justify-between items-center bg-white/5 border border-white/5 rounded-xl p-3 text-xs">
                       <div>
                         <p className="font-bold text-zinc-200">{item.name}</p>
-                        <p className="text-zinc-500 mt-0.5">{item.quantity} x LKR {item.price.toFixed(2)}</p>
+                        <p className="text-zinc-500 mt-0.5">{(item.quantity || 1)} x LKR {(item.price || 0).toFixed(2)}</p>
                       </div>
                       <span className="font-semibold text-zinc-300">
-                        LKR {(item.price * item.quantity).toFixed(2)}
+                        LKR {((item.price || 0) * (item.quantity || 1)).toFixed(2)}
                       </span>
                     </div>
                   ))}
                 </div>
                 <div className="flex justify-between items-center pt-2 font-bold text-zinc-200 border-t border-white/5 text-sm">
                   <span>Grand Total</span>
-                  <span className="text-violet-400 text-base">LKR {selectedOrder.totalPrice.toFixed(2)}</span>
+                  <span className="text-violet-400 text-base">LKR {(selectedOrder.totalPrice || 0).toFixed(2)}</span>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="glass p-8 rounded-2xl border border-white/5 text-center text-zinc-505 text-sm hidden lg:block font-sans">
-              <Eye className="w-8 h-8 text-zinc-650 mx-auto mb-3" />
+            <div className="glass p-8 rounded-2xl border border-white/5 text-center text-zinc-500 text-sm hidden lg:block font-sans">
+              <Eye className="w-8 h-8 text-zinc-600 mx-auto mb-3" />
               Select an order from the list to review addresses, products, and update order fulfillment statuses.
             </div>
           )}

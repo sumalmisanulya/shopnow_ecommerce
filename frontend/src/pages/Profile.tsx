@@ -131,13 +131,13 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="space-y-3.5 text-sm text-zinc-455 font-sans">
+            <div className="space-y-3.5 text-sm text-zinc-400 font-sans">
               <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-zinc-550" />
+                <Mail className="w-4 h-4 text-zinc-500" />
                 <span>{user.email}</span>
               </div>
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-zinc-555" />
+                <MapPin className="w-4 h-4 text-zinc-500" />
                 <span>123 Creative Studio, NY 10001</span>
               </div>
             </div>
@@ -205,9 +205,9 @@ export default function ProfilePage() {
 
             {orders.length === 0 ? (
               <div className="py-20 text-center">
-                <Clock className="w-12 h-12 text-zinc-650 mx-auto mb-4" />
+                <Clock className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
                 <h4 className="text-zinc-300 font-bold font-sans">No orders found</h4>
-                <p className="text-xs text-zinc-550 mt-1 mb-6 font-sans">You haven't purchased any items yet.</p>
+                <p className="text-xs text-zinc-500 mt-1 mb-6 font-sans">You haven't purchased any items yet.</p>
                 <Link
                   to="/products"
                   className="inline-flex items-center gap-1 text-xs font-bold text-violet-400 hover:text-violet-300 transition-colors"
@@ -225,7 +225,7 @@ export default function ProfilePage() {
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-white/5 pb-3.5 mb-3.5">
                       <div>
                         <span className="text-xs text-zinc-400 font-semibold font-mono">Code: {ord.code}</span>
-                        <div className="flex items-center gap-2 text-xs text-zinc-550 mt-1 font-sans">
+                        <div className="flex items-center gap-2 text-xs text-zinc-500 mt-1 font-sans">
                           <Calendar className="w-3.5 h-3.5" />
                           <span>{new Date(ord.createdAt).toLocaleDateString()}</span>
                         </div>
@@ -247,7 +247,7 @@ export default function ProfilePage() {
                       {ord.items.map((item, idx) => (
                         <div key={idx} className="flex justify-between text-sm font-sans">
                           <span className="text-zinc-300">
-                            {item.name} <span className="text-xs text-zinc-555 font-bold">x {item.quantity}</span>
+                            {item.name} <span className="text-xs text-zinc-500 font-bold">x {item.quantity}</span>
                           </span>
                           <span className="text-zinc-200 font-medium">LKR {(item.price * item.quantity).toFixed(2)}</span>
                         </div>

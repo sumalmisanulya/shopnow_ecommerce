@@ -86,7 +86,7 @@ export default function AdminDashboardPage() {
       icon: AlertTriangle,
       color: lowStockCount > 0 
         ? "text-amber-400 bg-amber-500/10 border-amber-500/20 animate-pulse-subtle"
-        : "text-zinc-550 bg-zinc-550/10 border-zinc-550/10"
+        : "text-zinc-500 bg-zinc-500/10 border-zinc-500/10"
     },
     {
       title: "Pending Returns",
@@ -95,7 +95,7 @@ export default function AdminDashboardPage() {
       icon: RotateCcw,
       color: returnsCount > 0
         ? "text-rose-400 bg-rose-500/10 border-rose-500/20 animate-pulse-subtle"
-        : "text-zinc-555 bg-zinc-555/10 border-zinc-555/10"
+        : "text-zinc-500 bg-zinc-500/10 border-zinc-500/10"
     }
   ];
 
@@ -137,7 +137,7 @@ export default function AdminDashboardPage() {
             <TrendingUp className="w-4.5 h-4.5 text-violet-400" />
             System Performance
           </h3>
-          <div className="h-60 rounded-xl bg-zinc-955/40 border border-white/5 flex flex-col items-center justify-center p-6 text-center">
+          <div className="h-60 rounded-xl bg-zinc-900/40 border border-white/5 flex flex-col items-center justify-center p-6 text-center">
             <Activity className="w-8 h-8 text-zinc-700 animate-pulse mb-3" />
             <h4 className="text-sm font-semibold text-zinc-400 font-sans">All Sandbox Systems Operational</h4>
             <p className="text-xs text-zinc-500 mt-1 max-w-xs leading-relaxed font-sans">

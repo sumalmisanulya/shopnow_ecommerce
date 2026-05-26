@@ -146,7 +146,7 @@ export default function AdminMessagesPage() {
                   </span>
                 </div>
 
-                <div className="p-3 bg-zinc-955/40 border border-white/5 rounded-xl text-xs text-zinc-300 leading-relaxed font-sans whitespace-pre-line">
+                <div className="p-3 bg-zinc-900/40 border border-white/5 rounded-xl text-xs text-zinc-300 leading-relaxed font-sans whitespace-pre-line">
                   {ticket.message}
                 </div>
               </div>

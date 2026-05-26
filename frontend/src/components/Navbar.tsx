@@ -132,6 +132,16 @@ export default function Navbar() {
               )}
             </Link>
 
+            {user && user.role === "ADMIN" && (
+              <Link
+                to="/admin"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-600/10 border border-violet-500/20 text-violet-300 hover:bg-violet-600/20 hover:text-white text-xs font-semibold transition-all"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                <span>Admin Panel</span>
+              </Link>
+            )}
+
             {/* Profile Dropdown */}
             {user ? (
               <div className="relative">

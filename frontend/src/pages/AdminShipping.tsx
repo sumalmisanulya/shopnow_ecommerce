@@ -333,7 +333,7 @@ export default function AdminShippingPage() {
 
             <div className="p-4">
               {shippings.length === 0 ? (
-                <p className="text-sm text-zinc-550 text-center py-12">No active drivers or shipments registered yet.</p>
+                <p className="text-sm text-zinc-500 text-center py-12">No active drivers or shipments registered yet.</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {shippings.map((ship) => {
@@ -355,16 +355,16 @@ export default function AdminShippingPage() {
 
                         <div className="space-y-2 text-xs text-zinc-400">
                           <div className="flex items-center gap-2">
-                            <Truck className="w-3.5 h-3.5 text-zinc-550" />
+                            <Truck className="w-3.5 h-3.5 text-zinc-500" />
                             <span>{ship.vehicleType} • <span className="font-mono text-zinc-300">{ship.vehicleNumber}</span></span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <MapPin className="w-3.5 h-3.5 text-zinc-550" />
+                            <MapPin className="w-3.5 h-3.5 text-zinc-500" />
                             <span>Last Location: <span className="text-zinc-300">{ship.location}</span></span>
                           </div>
                           {matchedOrder && (
                             <div className="flex items-start gap-2 pt-2 border-t border-white/5">
-                              <Navigation className="w-3.5 h-3.5 text-zinc-550 mt-0.5 shrink-0" />
+                              <Navigation className="w-3.5 h-3.5 text-zinc-500 mt-0.5 shrink-0" />
                               <span className="text-[10px] text-zinc-500 line-clamp-2">{matchedOrder.shippingAddress}</span>
                             </div>
                           )}

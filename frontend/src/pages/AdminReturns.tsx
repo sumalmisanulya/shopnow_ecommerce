@@ -120,7 +120,7 @@ export default function AdminReturnsPage() {
       {/* Grid of claims */}
       {filteredReturns.length === 0 ? (
         <div className="glass p-12 rounded-2xl border border-white/5 text-center text-zinc-500 text-sm font-sans">
-          <ClipboardList className="w-10 h-10 text-zinc-650 mx-auto mb-3" />
+          <ClipboardList className="w-10 h-10 text-zinc-600 mx-auto mb-3" />
           No return requests logged or matching search queries.
         </div>
       ) : (

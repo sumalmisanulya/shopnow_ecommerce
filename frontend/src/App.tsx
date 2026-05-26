@@ -37,8 +37,8 @@ function RootLayout() {
             &copy; {new Date().getFullYear()} ShopNow Inc. All rights reserved.
           </p>
           <div className="flex gap-6">
-            <Link to="/about" className="text-xs text-zinc-550 hover:text-zinc-300 transition-colors">About</Link>
-            <Link to="/contact" className="text-xs text-zinc-550 hover:text-zinc-300 transition-colors">Contact</Link>
+            <Link to="/about" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">About</Link>
+            <Link to="/contact" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">Contact</Link>
           </div>
         </div>
       </footer>
